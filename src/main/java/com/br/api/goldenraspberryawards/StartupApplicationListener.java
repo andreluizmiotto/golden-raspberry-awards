@@ -17,5 +17,4 @@ public class StartupApplicationListener implements ApplicationListener<Applicati
         fileService.loadAndPersistCsvFile("movielist.csv");
     }
 
-
 }

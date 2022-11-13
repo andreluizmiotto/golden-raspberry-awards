@@ -13,7 +13,7 @@ import java.util.Optional;
 public class FileService {
 
     @Autowired
-    MovieService movieService;
+    private MovieService movieService;
 
     public void loadAndPersistCsvFile(String path) {
         FileReader<Movie> fileReader = new CsvReader<>(Movie.class);

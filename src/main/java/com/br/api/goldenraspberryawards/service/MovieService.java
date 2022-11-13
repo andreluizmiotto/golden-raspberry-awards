@@ -16,7 +16,7 @@ import java.util.Optional;
 public class MovieService {
 
     @Autowired
-    MovieRepository movieRepository;
+    private MovieRepository movieRepository;
 
     public void save(List<Movie> movieList) {
         movieRepository.saveAll(movieList);

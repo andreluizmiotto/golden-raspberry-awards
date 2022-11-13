@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class GoldenRaspberryAwardsController {
 
     @Autowired
-    MovieService movieService;
+    private MovieService movieService;
 
     @GetMapping("/min-max-interval")
     public ResponseEntity<?> getMinMaxWinningInterval() {
