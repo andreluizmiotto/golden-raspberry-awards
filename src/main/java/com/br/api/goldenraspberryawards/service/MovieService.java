@@ -31,7 +31,7 @@ public class MovieService {
         }
 
         for (String producers : producersList.get()) {
-            List<Movie> movieList = movieRepository.findAllByProducersOrderByYearAsc(producers);
+            List<Movie> movieList = movieRepository.findAllByProducersAndWinnerOrderByYearAsc(producers, "yes");
 
             minMaxIntervalDTO.getMin().add(getProducersInterval(movieList, true));
             minMaxIntervalDTO.getMax().add(getProducersInterval(movieList, false));
