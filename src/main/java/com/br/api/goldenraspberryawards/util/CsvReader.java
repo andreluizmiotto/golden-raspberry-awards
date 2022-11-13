@@ -25,8 +25,7 @@ public class CsvReader<T> implements FileReader<T>{
                     .build();
 
             return csvToBean.parse();
-        } catch (Exception exception) {
-            System.out.println(exception.getMessage());
+        } catch (Exception ignored) {
         }
         return null;
     }

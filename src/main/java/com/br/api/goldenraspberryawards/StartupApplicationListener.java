@@ -10,6 +10,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class StartupApplicationListener implements ApplicationListener<ApplicationReadyEvent> {
@@ -24,7 +25,7 @@ public class StartupApplicationListener implements ApplicationListener<Applicati
 
     private void loadAndPersistLocalCsvFile() {
         FileReader<Movie> fileReader = new CsvReader<>(Movie.class);
-        List<Movie> movieList = fileReader.read("movielist.csv");
-        movieService.save(movieList);
+        Optional<List<Movie>> movieList = Optional.ofNullable(fileReader.read("movielist.csv"));
+        movieList.ifPresent(movies -> movieService.save(movies));
     }
 }
