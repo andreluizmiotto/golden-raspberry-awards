@@ -14,7 +14,7 @@ public class StartupApplicationListener implements ApplicationListener<Applicati
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        fileService.loadAndPersistLocalCsvFile();
+        fileService.loadAndPersistCsvFile("movielist.csv");
     }
 
 

@@ -15,9 +15,9 @@ public class FileService {
     @Autowired
     MovieService movieService;
 
-    public void loadAndPersistLocalCsvFile() {
+    public void loadAndPersistCsvFile(String path) {
         FileReader<Movie> fileReader = new CsvReader<>(Movie.class);
-        Optional<List<Movie>> movieList = Optional.ofNullable(fileReader.read("movielist.csv"));
+        Optional<List<Movie>> movieList = Optional.ofNullable(fileReader.read(path));
         movieList.ifPresent(movies -> movieService.save(movies));
     }
 }
