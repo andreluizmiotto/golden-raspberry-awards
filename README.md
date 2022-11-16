@@ -6,17 +6,19 @@
 * Banco de dados H2
 * Gradle
   
-## 💻 Para executar o projeto:
+## 💻 Executando o projeto:
 
-Linux (terminal):
-```
-./gradlew bootRun
-```
+Para inicializar o projeto, execute o script ```gradlew```, presente na pasta raíz do projeto, com o parâmetro ```bootRun```:
 
-Windows (powershell):
-```
-.\gradlew bootRun
-```
+> Linux ou Mac:
+> ```
+> ./gradlew bootRun
+> ```
+
+> Windows:
+> ```
+> .\gradlew bootRun
+> ```
 
 Se o Java 17 não estiver setado no JAVA_HOME, adicionar o parâmetro ```-Dorg.gradle.java.home=/DIRETORIO_JAVA_17```, ex:
 ```
