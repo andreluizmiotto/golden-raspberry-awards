@@ -62,7 +62,7 @@ public class MovieRepositoryTest {
     public void findAllByProducersOrderByYearAsc() {
         insertData();
 
-        List<Movie> movieList = movieRepository.findAllByProducersOrderByYearAsc("Peter Jackson");
+        List<Movie> movieList = movieRepository.findAllByProducersAndWinnerOrderByYearAsc("Peter Jackson", "yes");
 
         Assertions.assertNotNull(movieList);
         Assertions.assertEquals(movieList.get(0).getYear(), "2001");
