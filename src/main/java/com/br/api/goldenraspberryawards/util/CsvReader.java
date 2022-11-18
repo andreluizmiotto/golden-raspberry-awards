@@ -19,6 +19,15 @@ public class CsvReader<T> implements FileReader<T>{
     @Override
     public List<T> read(String path) {
         try (Reader reader = Files.newBufferedReader(Paths.get(path))) {
+            return read(reader);
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    @Override
+    public List<T> read(Reader reader) {
+        try (reader) {
             CsvToBean<T> csvToBean = new CsvToBeanBuilder<T>(reader)
                     .withType(typeParameterClass)
                     .withSeparator(';')
