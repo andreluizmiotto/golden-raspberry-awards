@@ -1,7 +1,10 @@
 package com.br.api.goldenraspberryawards.repository;
 
 import com.br.api.goldenraspberryawards.domain.Movie;
+import com.br.api.goldenraspberryawards.util.CsvReader;
+import com.br.api.goldenraspberryawards.util.FileReader;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -9,7 +12,11 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.io.StringReader;
 import java.util.List;
+import java.util.Optional;
+
+import static com.br.api.goldenraspberryawards.utils.FileData.getFileData;
 
 @DataJpaTest
 @AutoConfigureTestDatabase
@@ -22,56 +29,45 @@ public class MovieRepositoryTest {
     @Autowired
     private TestEntityManager testEntityManager;
 
-    private void insertData() {
-        testEntityManager.merge(new Movie(
-                1,
-                "2001",
-                "The Lord of the Rings: The Fellowship of the Ring",
-                "New Line Cinema",
-                "Peter Jackson",
-                "yes"));
-        testEntityManager.merge(new Movie(
-                2,
-                "2002",
-                "The Lord of the Rings: The Two Towers",
-                "New Line Cinema",
-                "Peter Jackson",
-                "yes"));
-        testEntityManager.merge(new Movie(
-                3,
-                "2003",
-                "The Lord of the Rings: The Return of the King",
-                "New Line Cinema",
-                "Peter Jackson",
-                "yes"));
-        testEntityManager.flush();
+    @BeforeEach
+    void setUp() {
+        FileReader<Movie> fileReader = new CsvReader<>(Movie.class);
+        Optional<List<Movie>> movieList = Optional.ofNullable(
+                fileReader.read(
+                        new StringReader(getFileData())));
+
+        Assertions.assertTrue(movieList.isPresent());
+        movieList.get().forEach(movie -> testEntityManager.persistAndFlush(movie));
     }
 
     @Test
-    public void shouldFindAllProducersByWinnerMovies() {
-        insertData();
+    void shouldFindWinningProducers() {
+        Optional<List<String>> movieList = movieRepository.findAllProducersByWinnerMovies();
 
-        List<String> movieList = movieRepository.findAllProducersByWinnerMovies().get();
-
-        Assertions.assertNotNull(movieList);
-        Assertions.assertEquals(movieList.size(), 1);
-        Assertions.assertEquals(movieList.get(0), "Peter Jackson");
+        Assertions.assertTrue(movieList.isPresent());
+        Assertions.assertTrue(movieList.get().stream().anyMatch(s -> s.contains("Allan Carr")));
+        Assertions.assertTrue(movieList.get().stream().anyMatch(s -> s.contains("Steve Fargnoli")));
+        Assertions.assertTrue(movieList.get().stream().anyMatch(s -> s.contains("Steven Perry")));
+        Assertions.assertTrue(movieList.get().stream().anyMatch(s -> s.contains("Joel Silver")));
+        Assertions.assertFalse(movieList.get().stream().anyMatch(s -> s.contains("Jerry Weintraub")));
     }
 
     @Test
-    public void findAllByProducersOrderByYearAsc() {
-        insertData();
+    void shouldCountProducerWins() {
+        Assertions.assertNotEquals(movieRepository.countProducerWins("Allan Carr"), 0);
+        Assertions.assertEquals(movieRepository.countProducerWins("Allan Carr"), 1);
+        Assertions.assertEquals(movieRepository.countProducerWins("Bo Derek"), 2);
+        Assertions.assertEquals(movieRepository.countProducerWins("Steve Shagan"), 0);
+    }
 
-        List<Movie> movieList = movieRepository.findAllByProducersAndWinnerOrderByYearAsc("Peter Jackson", "yes");
+    @Test
+    void shouldFindMoviesByWinningProducers() {
+        List<Movie> movieList = movieRepository.findAllByProducersContainingAndWinnerOrderByYearAsc("Allan Carr", "yes");
+        Assertions.assertTrue(movieList.stream().anyMatch(movie -> movie.getTitle().equals("Can't Stop the Music")));
+        Assertions.assertTrue(movieList.stream().noneMatch(movie -> movie.getTitle().equals("Where the Boys Are '84")));
 
-        Assertions.assertNotNull(movieList);
-        Assertions.assertEquals(movieList.get(0).getYear(), "2001");
-        Assertions.assertEquals(movieList.get(0).getTitle(), "The Lord of the Rings: The Fellowship of the Ring");
-
-        Assertions.assertEquals(movieList.get(1).getYear(), "2002");
-        Assertions.assertEquals(movieList.get(1).getTitle(), "The Lord of the Rings: The Two Towers");
-
-        Assertions.assertEquals(movieList.get(2).getYear(), "2003");
-        Assertions.assertEquals(movieList.get(2).getTitle(), "The Lord of the Rings: The Return of the King");
+        movieList = movieRepository.findAllByProducersContainingAndWinnerOrderByYearAsc("Bo Derek", "yes");
+        Assertions.assertTrue(movieList.stream().anyMatch(movie -> movie.getTitle().equals("Bolero")));
+        Assertions.assertTrue(movieList.stream().anyMatch(movie -> movie.getTitle().equals("Ghosts Can't Do It")));
     }
 }
