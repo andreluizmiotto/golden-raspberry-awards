@@ -7,10 +7,11 @@ import com.br.api.goldenraspberryawards.repository.MovieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class MovieService {
@@ -23,45 +24,71 @@ public class MovieService {
     }
 
     public MinMaxIntervalDTO getMinMaxIntervalDTO() {
+        return filterMinMaxIntervalDTO(
+                getAllProducersDTO(
+                        filterTwiceWinningProducers(
+                                movieRepository.findAllProducersByWinnerMovies().orElseGet(ArrayList::new))));
+    }
+
+    private MinMaxIntervalDTO filterMinMaxIntervalDTO(List<ProducersDTO> producersDTOList) {
+        if (producersDTOList.isEmpty()) {
+            return new MinMaxIntervalDTO();
+        }
+
+        int minInterval = Collections.min(producersDTOList, Comparator.comparingInt(ProducersDTO::getInterval)).getInterval();
+        int maxInterval = Collections.max(producersDTOList, Comparator.comparingInt(ProducersDTO::getInterval)).getInterval();
+
         MinMaxIntervalDTO minMaxIntervalDTO = new MinMaxIntervalDTO();
-
-        Optional<List<String>> producersList = movieRepository.findAllProducersByWinnerMovies();
-        if (producersList.isEmpty() || producersList.get().isEmpty()) {
-            return minMaxIntervalDTO;
-        }
-
-        for (String producers : producersList.get()) {
-            List<Movie> movieList = movieRepository.findAllByProducersAndWinnerOrderByYearAsc(producers, "yes");
-
-            minMaxIntervalDTO.getMin().add(getProducersInterval(movieList, true));
-            minMaxIntervalDTO.getMax().add(getProducersInterval(movieList, false));
-        }
-
-        int minInterval = Collections.min(minMaxIntervalDTO.getMin(), Comparator.comparingInt(ProducersDTO::getInterval)).getInterval();
-        int maxInterval = Collections.max(minMaxIntervalDTO.getMax(), Comparator.comparingInt(ProducersDTO::getInterval)).getInterval();
-
-        minMaxIntervalDTO.getMin().removeIf(producersDTO -> producersDTO.getInterval() > minInterval);
-        minMaxIntervalDTO.getMax().removeIf(producersDTO -> producersDTO.getInterval() < maxInterval);
+        minMaxIntervalDTO.setMin(producersDTOList.stream().filter(producersDTO -> producersDTO.getInterval() == minInterval).collect(Collectors.toList()));
+        minMaxIntervalDTO.setMax(producersDTOList.stream().filter(producersDTO -> producersDTO.getInterval() == maxInterval).collect(Collectors.toList()));
 
         return minMaxIntervalDTO;
     }
 
-    private ProducersDTO getProducersInterval(List<Movie> movieList, Boolean isMinInterval) {
-        ProducersDTO producersDTO = new ProducersDTO();
-        producersDTO.setProducer(movieList.get(0).getProducers());
+    private List<ProducersDTO> getAllProducersDTO(List<String> twiceWinningProducerList) {
+        List<ProducersDTO> producersDTOList = new ArrayList<>();
 
+        twiceWinningProducerList.forEach(producerName -> {
+            List<Movie> movieList = movieRepository.findAllByProducersContainingAndWinnerOrderByYearAsc(producerName, "yes");
+            producersDTOList.addAll(getProducersDTO(movieList, producerName));
+        });
+
+        return producersDTOList;
+    }
+
+    private List<String> filterTwiceWinningProducers(List<String> winnerProducers) {
+        List<String> twiceWinningProducers = new ArrayList<>();
+
+        winnerProducers.forEach(producers ->  {
+            for (String producerName : producers.split(", | and ")) {
+                if (twiceWinningProducers.contains(producerName)) {
+                    continue;
+                }
+                if (movieRepository.countProducerWins(producerName) > 1) {
+                    twiceWinningProducers.add(producerName);
+                }
+            }
+        });
+
+        return twiceWinningProducers;
+    }
+
+    private List<ProducersDTO> getProducersDTO(List<Movie> movieList, String producerName) {
+        List<ProducersDTO> producersDTOList = new ArrayList<>();
         for (int i = 0; i < movieList.size() - 1; i++) {
             Movie previousWin = movieList.get(i);
             Movie followingWin = movieList.get(i + 1);
 
             Integer interval = Integer.parseInt(followingWin.getYear()) - Integer.parseInt(previousWin.getYear());
-            if (producersDTO.getInterval() == null ||
-                    ((isMinInterval && (interval < producersDTO.getInterval())) || (!isMinInterval && (interval > producersDTO.getInterval())))) {
-                producersDTO.setInterval(interval);
-                producersDTO.setPreviousWin(previousWin.getYear());
-                producersDTO.setFollowingWin(followingWin.getYear());
-            }
+
+            producersDTOList.add(
+                    new ProducersDTO(
+                            producerName,
+                            interval,
+                            previousWin.getYear(),
+                            followingWin.getYear()));
         }
-        return producersDTO;
+
+        return producersDTOList;
     }
 }

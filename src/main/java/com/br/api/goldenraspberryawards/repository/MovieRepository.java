@@ -9,9 +9,12 @@ import java.util.Optional;
 
 public interface MovieRepository extends JpaRepository<Movie, Integer> {
 
-    @Query(value = "SELECT producers FROM Movie WHERE winner = 'yes' GROUP BY producers HAVING COUNT(producers) > 1")
+    @Query(value = "SELECT producers FROM Movie WHERE winner = 'yes' GROUP BY producers")
     Optional<List<String>> findAllProducersByWinnerMovies();
 
-    List<Movie> findAllByProducersAndWinnerOrderByYearAsc(String producers, String winner);
+    @Query(value = "SELECT count(id) FROM Movie WHERE winner = 'yes' AND producers LIKE CONCAT('%', ?1, '%')")
+    Integer countProducerWins(String producer);
+
+    List<Movie> findAllByProducersContainingAndWinnerOrderByYearAsc(String producer, String winner);
 
 }
