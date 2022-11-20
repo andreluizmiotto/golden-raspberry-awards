@@ -15,7 +15,7 @@ public class MinMaxIntervalDTO {
         max = new ArrayList<>();
     }
 
-    private List<ProducersDTO> min;
-    private List<ProducersDTO> max;
+    private List<ProducerDTO> min;
+    private List<ProducerDTO> max;
 
 }

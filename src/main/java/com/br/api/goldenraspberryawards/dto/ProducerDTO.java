@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class ProducersDTO {
+public class ProducerDTO {
 
     private String producer;
     private Integer interval;
